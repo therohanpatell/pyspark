@@ -1,0 +1,98 @@
+[
+  {
+    "metric_id": "daily_revenue",
+    "metric_name": "Daily Revenue",
+    "metric_type": "currency",
+    "sql": "SELECT SUM(amount) as metric_output, SUM(amount) as numerator_value, 1 as denominator_value FROM `project.dataset.transactions` WHERE transaction_date = {currently} AND status = 'completed'",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.revenue_metrics"
+  },
+  {
+    "metric_id": "daily_transaction_count",
+    "metric_name": "Daily Transaction Count",
+    "metric_type": "count",
+    "sql": "SELECT COUNT(*) as metric_output, COUNT(*) as numerator_value, 1 as denominator_value FROM `project.dataset.transactions` WHERE transaction_date = {currently}",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.transaction_metrics"
+  },
+  {
+    "metric_id": "conversion_rate",
+    "metric_name": "Daily Conversion Rate",
+    "metric_type": "percentage",
+    "sql": "SELECT (converted_users * 100.0 / total_users) as metric_output, converted_users as numerator_value, total_users as denominator_value FROM `project.dataset.user_conversion_stats` WHERE partition_dt = {partition_info}",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.conversion_metrics"
+  },
+  {
+    "metric_id": "average_order_value",
+    "metric_name": "Average Order Value",
+    "metric_type": "currency",
+    "sql": "SELECT AVG(order_amount) as metric_output, SUM(order_amount) as numerator_value, COUNT(*) as denominator_value FROM `project.dataset.orders` WHERE order_date = {currently} AND status = 'completed'",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.order_metrics"
+  },
+  {
+    "metric_id": "weekly_active_users",
+    "metric_name": "Weekly Active Users",
+    "metric_type": "count",
+    "sql": "SELECT COUNT(DISTINCT user_id) as metric_output, COUNT(DISTINCT user_id) as numerator_value, 1 as denominator_value FROM `project.dataset.user_activity` WHERE activity_date >= DATE_SUB({currently}, INTERVAL 7 DAY) AND activity_date <= {currently}",
+    "dependency": "weekly_metrics",
+    "target_table": "project.dataset.user_metrics"
+  },
+  {
+    "metric_id": "customer_acquisition_cost",
+    "metric_name": "Customer Acquisition Cost",
+    "metric_type": "currency",
+    "sql": "SELECT (total_marketing_spend / new_customers) as metric_output, total_marketing_spend as numerator_value, new_customers as denominator_value FROM `project.dataset.marketing_summary` WHERE summary_date = {currently}",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.marketing_metrics"
+  },
+  {
+    "metric_id": "monthly_recurring_revenue",
+    "metric_name": "Monthly Recurring Revenue",
+    "metric_type": "currency",
+    "sql": "SELECT SUM(subscription_amount) as metric_output, SUM(subscription_amount) as numerator_value, 1 as denominator_value FROM `project.dataset.subscriptions` WHERE subscription_status = 'active' AND DATE_TRUNC(subscription_start_date, MONTH) <= DATE_TRUNC({currently}, MONTH) AND (subscription_end_date IS NULL OR DATE_TRUNC(subscription_end_date, MONTH) >= DATE_TRUNC({currently}, MONTH))",
+    "dependency": "monthly_metrics",
+    "target_table": "project.dataset.subscription_metrics"
+  },
+  {
+    "metric_id": "churn_rate",
+    "metric_name": "Monthly Churn Rate",
+    "metric_type": "percentage",
+    "sql": "SELECT (churned_customers * 100.0 / total_customers_start_month) as metric_output, churned_customers as numerator_value, total_customers_start_month as denominator_value FROM `project.dataset.churn_analysis` WHERE analysis_month = DATE_TRUNC({currently}, MONTH)",
+    "dependency": "monthly_metrics",
+    "target_table": "project.dataset.churn_metrics"
+  },
+  {
+    "metric_id": "inventory_turnover",
+    "metric_name": "Inventory Turnover Ratio",
+    "metric_type": "ratio",
+    "sql": "SELECT (cost_of_goods_sold / average_inventory) as metric_output, cost_of_goods_sold as numerator_value, average_inventory as denominator_value FROM `project.dataset.inventory_analysis` WHERE analysis_date = {currently}",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.inventory_metrics"
+  },
+  {
+    "metric_id": "customer_lifetime_value",
+    "metric_name": "Customer Lifetime Value",
+    "metric_type": "currency",
+    "sql": "SELECT AVG(lifetime_value) as metric_output, SUM(lifetime_value) as numerator_value, COUNT(*) as denominator_value FROM `project.dataset.customer_ltv` WHERE calculation_date = {currently}",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.ltv_metrics"
+  },
+  {
+    "metric_id": "website_bounce_rate",
+    "metric_name": "Website Bounce Rate",
+    "metric_type": "percentage",
+    "sql": "SELECT (bounced_sessions * 100.0 / total_sessions) as metric_output, bounced_sessions as numerator_value, total_sessions as denominator_value FROM `project.dataset.web_analytics` WHERE session_date = {currently}",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.web_metrics"
+  },
+  {
+    "metric_id": "support_ticket_resolution_time",
+    "metric_name": "Average Support Ticket Resolution Time (hours)",
+    "metric_type": "duration",
+    "sql": "SELECT AVG(DATETIME_DIFF(resolved_at, created_at, HOUR)) as metric_output, SUM(DATETIME_DIFF(resolved_at, created_at, HOUR)) as numerator_value, COUNT(*) as denominator_value FROM `project.dataset.support_tickets` WHERE DATE(resolved_at) = {currently} AND status = 'resolved'",
+    "dependency": "daily_metrics",
+    "target_table": "project.dataset.support_metrics"
+  }
+]
